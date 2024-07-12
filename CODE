@@ -1,0 +1,131 @@
+function main()
+    % Initialize the game board
+    board = zeros(4);
+
+    % Add two random tiles to start the game
+    board = addRandomTile(board);
+    board = addRandomTile(board);
+
+    % Display the initial board
+    dispBoard(board);
+
+    % Main game loop
+    while ~gameOver(board)
+        % Get user input
+        direction = input('Enter direction (w/s/a/d): ', 's');
+
+        % Move tiles
+        board = move(board, direction);
+
+        % Add a random tile
+        board = addRandomTile(board);
+
+        % Display the updated board
+        dispBoard(board);
+    end
+
+    disp('Game over!');
+end
+
+function dispBoard(board)
+    % Display the game board
+    disp('-------------');
+    for i = 1:4
+        fprintf('|');
+        for j = 1:4
+            if board(i,j) == 0
+                fprintf('    |');
+            else
+                fprintf('%4d|', board(i,j));
+            end
+        end
+        fprintf('\n-------------\n');
+    end
+end
+
+function board = addRandomTile(board)
+    % Add a random tile (2 or 4) to a random empty position on the board
+    emptyTiles = find(board == 0);
+    if ~isempty(emptyTiles)
+        index = emptyTiles(randi(length(emptyTiles)));
+        board(index) = 2 * (rand() < 0.9) + 2;
+    end
+end
+
+function board = move(board, direction)
+    % Move tiles in the specified direction
+    switch direction
+        case 'w'
+            board = moveUp(board);
+        case 's'
+            board = moveDown(board);
+        case 'a'
+            board = moveLeft(board);
+        case 'd'
+            board = moveRight(board);
+        otherwise
+            disp('Invalid direction! Use w, s, a, or d.');
+    end
+end
+
+function board = moveUp(board)
+    % Move tiles upwards
+    board = board';
+    board = moveLeft(board);
+    board = board';
+end
+
+function board = moveDown(board)
+    % Move tiles downwards
+    board = board';
+    board = moveRight(board);
+    board = board';
+end
+
+function board = moveLeft(board)
+    % Move tiles to the left
+    for i = 1:4
+        row = board(i,:);
+        newRow = slide(row);
+        board(i,:) = merge(newRow);
+    end
+end
+
+function board = moveRight(board)
+    % Move tiles to the right
+    for i = 1:4
+        row = fliplr(board(i,:));
+        newRow = slide(row);
+        board(i,:) = fliplr(merge(newRow));
+    end
+end
+
+function newRow = slide(row)
+    % Slide non-zero tiles to the left
+    newRow = nonzeros(row)';
+    newRow = [newRow, zeros(1, length(row) - length(newRow))];
+end
+
+function newRow = merge(row)
+    % Merge adjacent identical tiles
+    newRow = row;
+    for i = 1:length(row) - 1
+        if newRow(i) == newRow(i+1)
+            newRow(i) = 2 * newRow(i);
+            newRow(i+1) = 0;
+        end
+    end
+end
+
+function over = gameOver(board)
+    % Check if the game is over (no possible moves left)
+    over = all(board(:) ~= 0);
+    for i = 1:4
+        for j = 1:3
+            if board(i,j) == board(i,j+1) || board(j,i) == board(j+1,i)
+                over = false;
+                return;
+            end
+        end
+    end
+end
